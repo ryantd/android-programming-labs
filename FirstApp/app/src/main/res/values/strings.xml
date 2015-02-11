@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Xiaoyu Zhai First App</string>
+    <string name="page_one">This is the Page One, please input a number:</string>
+    <string name="action_settings">Settings</string>
+    <string name="display_title">Your Number :</string>
+
+</resources>

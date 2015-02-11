@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- From: file:/Users/xiaoyuzhai/Project/CS522MobileApps/BookstoreBasic/app/src/main/res/values/color.xml -->
+    <eat-comment/>
+    <color name="default_color">#000000</color>
+    <color name="pressed_color">#fffe8e26</color>
+    <!-- From: file:/Users/xiaoyuzhai/Project/CS522MobileApps/BookstoreBasic/app/src/main/res/values/strings.xml -->
+    <eat-comment/>
+    <string name="action_delete">delete</string>
+    <string name="add">Add</string>
+    <string name="app_name">Book Store</string>
+    <string name="checkout">Checkout</string>
+    <string name="chkout_cancel">Cancel</string>
+    <string name="chkout_ok">Order</string>
+    <string name="delete">Delete</string>
+    <string name="empty_cart">THE CART IS EMPTY!</string>
+    <string name="search_add">Search &amp; Add</string>
+    <string name="search_cancel">Cancel</string>
+</resources>
