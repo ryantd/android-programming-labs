@@ -1,0 +1,14 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/chk_order"
+        android:icon="@drawable/ic_menu_btn_add"
+        android:showAsAction="ifRoom"
+        android:title="@string/chkout_ok"/>
+    <item
+        android:id="@+id/chk_cancel"
+        android:icon="@drawable/ic_menu_clear_playlist"
+        android:showAsAction="ifRoom"
+        android:title="@string/chkout_cancel"/>
+
+</menu>

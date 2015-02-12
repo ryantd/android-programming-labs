@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Book Store</string>
+    <string name="title_activity_add_book">Add Book</string>
+    <string name="title_activity_checkout">Check Out</string>
+
+    <string name="add">Add</string>
+    <string name="checkout">Checkout</string>
+    <string name="delete">Delete</string>
+
+    <string name="search_add">Search &amp; Add</string>
+    <string name="search_cancel">Cancel</string>
+
+    <string name="chkout_ok">Order</string>
+    <string name="chkout_cancel">Cancel</string>
+
+    <string name="action_delete">delete</string>
+
+    <string name="empty_cart">THE CART IS EMPTY!</string>
+</resources>
