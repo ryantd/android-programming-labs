@@ -2,6 +2,8 @@ package edu.stevens.cs522.bookstorebasicwithdb.activities;
 
 
         import android.app.Activity;
+        import android.content.ContentResolver;
+        import android.content.ContentValues;
         import android.content.Intent;
         import android.os.Bundle;
         import android.view.Menu;
@@ -11,6 +13,7 @@ package edu.stevens.cs522.bookstorebasicwithdb.activities;
 
         import edu.stevens.cs522.bookstorebasicwithdb.R;
         import edu.stevens.cs522.bookstorebasicwithdb.contracts.Book;
+        import edu.stevens.cs522.bookstorebasicwithdb.database.CartDbAdapter;
 
 public class AddBook extends Activity {
 
@@ -57,25 +60,26 @@ public class AddBook extends Activity {
     }
 
     public Book searchBook(){
-		/*
-		 * Search for the specified book.
-		 */
-        // TODO Just build a Book object with the search criteria and return that.
+
 
         EditText bookTitle = (EditText) findViewById(R.id.search_title);
-        EditText bookAuthor = (EditText) findViewById(R.id.search_author);
+        EditText bookAuthors = (EditText) findViewById(R.id.search_author);
         EditText bookIsbn = (EditText) findViewById(R.id.search_isbn);
+        EditText bookPrice = (EditText) findViewById(R.id.search_price);
 
         String thisTitle = bookTitle.getText().toString();
-        String thisAuthor = bookAuthor.getText().toString();
-        String[] authors = thisAuthor.split(", ");
+        String thisAuthors = bookAuthors.getText().toString();
+
+        /*String[] authors = thisAuthor.split(", ");
         Author[] authorsArray = new Author[authors.length];
         for(int i = 0; i < authors.length; i++){
             authorsArray[i] = new Author(authors[i].split(" "));
-        }
+        }*/
+
         String thisIsbn = bookIsbn.getText().toString();
-        Book newBook = new Book(100, thisTitle, authorsArray, thisIsbn, "10");
-        return newBook;
+        String thisPrice = bookPrice.getText().toString();
+
+        return new Book(thisTitle, thisAuthors, thisIsbn, thisPrice);
     }
 
 }

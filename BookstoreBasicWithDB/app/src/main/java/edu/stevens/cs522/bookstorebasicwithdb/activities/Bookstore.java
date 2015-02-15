@@ -1,6 +1,6 @@
 package edu.stevens.cs522.bookstorebasicwithdb.activities;
 
-import java.util.ArrayList;
+import java.sql.SQLException;
 import java.util.Vector;
 
 import android.app.Activity;
@@ -8,7 +8,7 @@ import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -16,13 +16,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
 import edu.stevens.cs522.bookstorebasicwithdb.R;
 import edu.stevens.cs522.bookstorebasicwithdb.contracts.Book;
-import edu.stevens.cs522.bookstorebasicwithdb.database.BooksAdapter;
+import edu.stevens.cs522.bookstorebasicwithdb.contracts.BookContract;
+import edu.stevens.cs522.bookstorebasicwithdb.database.CartDbAdapter;
 
 public class Bookstore extends ListActivity {
 
@@ -38,92 +40,91 @@ public class Bookstore extends ListActivity {
 
     // There is a reason this must be an ArrayList instead of a List.
     @SuppressWarnings("unused")
-    private ArrayList<Book> shoppingCart;
     private Vector<Integer> deletePool = new Vector<Integer>();
+    CartDbAdapter cartDb = new CartDbAdapter(this);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // TODO check if there is saved UI state, and if so, restore it (i.e. the cart contents)
-        if (savedInstanceState != null) {
-            ArrayList<Book> MyArrayList = savedInstanceState.getParcelableArrayList("MyArrayList");
-            shoppingCart = MyArrayList;
-        }
-        else {
-            shoppingCart = new ArrayList<Book>();
-        }
-
-        // TODO Set the layout (use cart.xml layout)
-
         setContentView(R.layout.cart);
-
-        // TODO use an array adapter to display the cart contents.
-
     }
     @Override
     protected void onStart (){
         super.onStart();
-        ArrayList<Book> arrayOfBooks = shoppingCart;
-        if (!arrayOfBooks.isEmpty()){
+        try {
+            cartDb.open();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        final Cursor allBooks = cartDb.fetchAllBooks();
+
+        if (allBooks.moveToFirst()) {
             TextView emptyText = (TextView) findViewById(R.id.cart_empty_text);
             emptyText.setVisibility(View.GONE);
-        }
-        final BooksAdapter adapter = new BooksAdapter(this, arrayOfBooks);
-        ListView listView = (ListView) findViewById(android.R.id.list);
-        listView.setAdapter(adapter);
-        listView.setLongClickable(true);
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, final View view, final int position,
-                                           long id) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
-                builder.setMessage("Sub Menu")
-                        .setCancelable(false)
-                        .setPositiveButton("More Info", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                String authorName = shoppingCart.get(position).authors[0].lastName + " " + shoppingCart.get(position).authors[1].lastName + ", " + shoppingCart.get(position).authors[2].lastName;
-                                String text = "Title: " + shoppingCart.get(position).title + "\nAuthor: " + authorName + "\nISBN: " + shoppingCart.get(position).isbn + "\nPrice: " + shoppingCart.get(position).price;
-                                Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG).show();
-                            }
-                        })
-                        .setNegativeButton("Delete", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                shoppingCart.remove(position);
-                                adapter.notifyDataSetChanged();
-                                if (shoppingCart.isEmpty()) {
-                                    TextView emptyText = (TextView) findViewById(R.id.cart_empty_text);
-                                    emptyText.setVisibility(View.VISIBLE);
+            String[] from = new String[]{BookContract.TITLE, BookContract.AUTHORS};
+            int[] to = new int[]{R.id.cart_row_title, R.id.cart_row_author};
+            final SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, R.layout.cart_row, allBooks, from, to);
+            ListView listView = (ListView) findViewById(android.R.id.list);
+            listView.setAdapter(adapter);
+            listView.setLongClickable(true);
+            listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+                @Override
+                public boolean onItemLongClick(AdapterView<?> parent, final View view, final int position,
+                                               long id) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
+                    builder.setMessage("Sub Menu")
+                            .setCancelable(false)
+                            .setPositiveButton("More Info", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                    TextView title = (TextView) view.findViewById(R.id.cart_row_title);
+                                    Book longClicked = new Book(title.getText().toString(), "", "", "");
+                                    try {
+                                        cartDb.open();
+                                    } catch (SQLException e) {
+                                        e.printStackTrace();
+                                    }
+                                    Cursor oneBook = cartDb.fetchAllBooks();
+                                    try {
+                                        oneBook = cartDb.fetchBook(longClicked);
+                                    } catch (SQLException e) {
+                                        e.printStackTrace();
+                                    }
+                                    oneBook.moveToFirst();
+                                    String text = "Title: " + oneBook.getString(1) + "\nAuthor: " + oneBook.getString(2) + "\nISBN: " + oneBook.getString(3) + "\nPrice: " + oneBook.getString(4);
+                                    Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG).show();
+                                    cartDb.close();
                                 }
-                            }
-                        });
-                AlertDialog alert = builder.create();
-                alert.show();
-                return true;
-            }
-        });
+                            })
+                            .setNegativeButton("Delete", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                    try {
+                                        cartDb.open();
+                                    } catch (SQLException e) {
+                                        e.printStackTrace();
+                                    }
+                                    TextView title = (TextView) view.findViewById(R.id.cart_row_title);
+                                    Book deleteBook = new Book(title.getText().toString(), "", "", "");
+                                    cartDb.deleteBook(deleteBook);
+                                    onCreate(null);
+                                    cartDb.close();
+                                }
+                            });
+                    AlertDialog alert = builder.create();
+                    alert.show();
+                    return true;
+                }
+            });
+        }
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position,
-                                    long id) {
-                view.setSelected(true);
-                deletePool.add(position);
 
-                TextView title = (TextView) findViewById(R.id.cart_row_title);
-                TextView author = (TextView) findViewById(R.id.cart_row_author);
-                title.setTextColor(Color.RED);
-                author.setTextColor(Color.RED);
-
-            }
-        });
+        cartDb.close();
 
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        // TODO provide ADD, DELETE and CHECKOUT options
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.bookstore, menu);
         return true;
@@ -132,32 +133,11 @@ public class Bookstore extends ListActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         super.onOptionsItemSelected(item);
-        // TODO
-
-        // ADD provide the UI for adding a book
-        // Intent addIntent = new Intent(this, AddBookActivity.class);
-        // startActivityForResult(addIntent, ADD_REQUEST);
-
-        // DELETE delete the currently selected book
-
-        // CHECKOUT provide the UI for checking out
 
         switch (item.getItemId()) {
             case R.id.add:
                 Intent addIntent = new Intent(this, AddBook.class);
                 startActivityForResult(addIntent, ADD_REQUEST);
-                return true;
-            case R.id.delete:
-                for (int i = 0; i < deletePool.size(); i++){
-                    int pos = deletePool.get(i);
-                    shoppingCart.remove(pos);
-                }
-                deletePool.clear();
-                onStart();
-                if (shoppingCart.isEmpty()) {
-                    TextView emptyText = (TextView) findViewById(R.id.cart_empty_text);
-                    emptyText.setVisibility(View.VISIBLE);
-                }
                 return true;
             case R.id.checkout:
                 Intent chkIntent = new Intent(this, Checkout.class);
@@ -171,22 +151,21 @@ public class Bookstore extends ListActivity {
     protected void onActivityResult(int requestCode, int resultCode,
                                     Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
-        // TODO Handle results from the Search and Checkout activities.
-
-        // Use SEARCH_REQUEST and CHECKOUT_REQUEST codes to distinguish the cases.
-
-        // SEARCH: add the book that is returned to the shopping cart.
-
-        // CHECKOUT: empty the shopping cart.
 
         switch(requestCode) {
             case (ADD_REQUEST):
                 if (resultCode == Activity.RESULT_OK) {
                     Bundle data = intent.getExtras();
                     Book newBook = (Book) data.getParcelable("book_result");
-                    shoppingCart.add(newBook);
+                    try {
+                        cartDb.open();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    cartDb.persist(newBook.title, newBook.authors, newBook.isbn, newBook.price);
+                    cartDb.close();
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setMessage("User added a new book, and the title is " + newBook.title + ", the author is " + newBook.authors[0].lastName + " " + newBook.authors[1].lastName + ". " + newBook.authors[2].lastName)
+                    builder.setMessage("User added a new book, and the title is " + newBook.title + ", the author is " + newBook.authors)
                             .setCancelable(false)
                             .setTitle("Details")
                             .setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -204,14 +183,22 @@ public class Bookstore extends ListActivity {
             case (CHECKOUT_REQUEST):
                 if (resultCode == Activity.RESULT_OK) {
                     String orderInfo = intent.getStringExtra("orderInfo");
-                    shoppingCart.clear();
+                    try {
+                        cartDb.open();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    cartDb.deleteAll();
+                    cartDb.close();
+                    onStart();
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setMessage(orderInfo)
                             .setCancelable(false)
                             .setTitle("Order Details")
                             .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int id) {
-                                    startActivity(getIntent());
+                                    onCreate(null);
+
                                 }
                             });
                     AlertDialog alert = builder.create();
@@ -222,15 +209,5 @@ public class Bookstore extends ListActivity {
                 }
                 break;
         }
-
-
-
     }
-
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        // TODO save the shopping cart contents (which should be a list of parcelables).
-        savedInstanceState.putParcelableArrayList("MyArrayList", shoppingCart);
-    }
-
 }

@@ -55,8 +55,6 @@ public class Checkout extends Activity {
 		/*
 		 * Search for the specified book.
 		 */
-        // TODO Just build a Book object with the search criteria and return that.
-
         EditText billName = (EditText) findViewById(R.id.name);
         EditText billEmail = (EditText) findViewById(R.id.email);
         EditText billCredit = (EditText) findViewById(R.id.credit);
