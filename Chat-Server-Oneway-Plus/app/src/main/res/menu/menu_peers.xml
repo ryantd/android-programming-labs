@@ -1,0 +1,9 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="edu.stevens.cs522.chat.oneway.server.activity.PeersList">
+    <item
+        android:id="@+id/peer_list"
+        android:icon="@drawable/ic_menu_clear_playlist"
+        android:showAsAction="ifRoom"
+        android:title="@string/action_settings"/>
+</menu>

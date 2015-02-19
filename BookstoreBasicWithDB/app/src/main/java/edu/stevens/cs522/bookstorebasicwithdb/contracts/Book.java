@@ -73,10 +73,6 @@ public class Book implements Parcelable{
         data[2] = isbn;
         data[3] = price;
         pc.writeStringArray(data);
-/*        if(authors == null){
-            authors = new Author[1];
-        }
-        pc.writeParcelableArray(authors, flags);*/
     }
 
     public void writeToProvider( ContentValues values)

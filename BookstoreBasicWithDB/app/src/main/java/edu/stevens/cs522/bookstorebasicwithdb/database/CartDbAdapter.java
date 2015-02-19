@@ -22,6 +22,10 @@ public class CartDbAdapter {
     public static final String KEY_ISBN = "isbn";
     public static final String KEY_PRICE = "price";
 
+    public static final String KEY_AID = "_id";
+    public static final String KEY_AUTHORNAME = "author";
+    public static final String KEY_BOOKTITLE = "book";
+
     private static final String TAG = "CartDbAdapter";
 
     private DatabaseHelper cartDbHelper;
@@ -36,6 +40,9 @@ public class CartDbAdapter {
     private static final String DATABASE_CREATE =
             "create table " + BOOK_TABLE + " (" + KEY_ROWID + " integer primary key autoincrement, "
                     + "title text, authors text, isbn text, price text);";
+    private static final String DATABASE_CREATE2 =
+            "create table " + AUTHOR_TABLE + " (" + KEY_AID + " integer primary key autoincrement, "
+                    + "author text, book text);";
 
     public CartDbAdapter(Context ctx) {
         this.cartContext = ctx;
@@ -111,6 +118,57 @@ public class CartDbAdapter {
         return cartDb.delete(BOOK_TABLE, KEY_ROWID+ "=" + id, null) > 0;
     }
 
+    public Cursor fetchAllAuthors() {
+        return cartDb.query(AUTHOR_TABLE, new String[] {KEY_AID, KEY_AUTHORNAME, KEY_BOOKTITLE}, null, null, null, null, null);
+    }
+
+    public Book fetchAuthor(long rowId) throws SQLException {
+        Cursor mCursor =
+                cartDb.query(true, AUTHOR_TABLE, new String[] {KEY_AID, KEY_AUTHORNAME, KEY_BOOKTITLE}, KEY_AID + "=" + rowId, null,
+                        null, null, null, null);
+        if (mCursor != null) {
+            mCursor.moveToFirst();
+        }
+        return new Book(mCursor);
+    }
+
+    public Cursor fetchAuthorBook(String name) throws SQLException
+    {
+        Cursor mCursor =
+                cartDb.query(true, AUTHOR_TABLE, new String[] {KEY_AID, KEY_AUTHORNAME, KEY_BOOKTITLE}, KEY_AUTHORNAME + "='" + name + "'", null,
+                        null, null, null, null);
+        if (mCursor != null)
+        {
+            mCursor.moveToFirst();
+        }
+        return mCursor;
+    }
+
+    public void addAuthor(String name, String book) {
+        ContentValues initialValues = new ContentValues();
+        initialValues.put(KEY_AUTHORNAME, name);
+        initialValues.put(KEY_BOOKTITLE, book);
+        cartDb.insert(BOOK_TABLE, null, initialValues);
+    }
+
+    public boolean deleteAllAuthor() {
+        cartDb.delete(AUTHOR_TABLE, null, null);
+        return true;
+    }
+
+    public boolean deleteAuthor(String name)
+    {
+        return cartDb.delete(AUTHOR_TABLE, KEY_AUTHORNAME + "='" + name + "'", null) > 0;
+    }
+
+    public boolean deleteAuthor(long id)
+    {
+        return cartDb.delete(AUTHOR_TABLE, KEY_AID+ "=" + id, null) > 0;
+    }
+
+
+
+
     public static class DatabaseHelper extends SQLiteOpenHelper {
 
         DatabaseHelper(Context context) {
@@ -120,6 +178,7 @@ public class CartDbAdapter {
         @Override
         public void onCreate(SQLiteDatabase db) {
             db.execSQL(DATABASE_CREATE);
+            db.execSQL(DATABASE_CREATE2);
         }
 
         @Override
@@ -127,6 +186,8 @@ public class CartDbAdapter {
             Log.w(TAG, "Upgrading database from version " + oldVersion + " to "
                     + newVersion + ", which will destroy all old data");
             db.execSQL("DROP TABLE IF EXISTS cart");
+            db.execSQL("DROP TABLE IF EXISTS author");
+            db.execSQL("PRAGMA foreign_keys=ON;");
             onCreate(db);
         }
     }

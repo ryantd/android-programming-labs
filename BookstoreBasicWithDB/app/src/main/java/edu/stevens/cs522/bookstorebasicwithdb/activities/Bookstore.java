@@ -106,7 +106,7 @@ public class Bookstore extends ListActivity {
                                     TextView title = (TextView) view.findViewById(R.id.cart_row_title);
                                     Book deleteBook = new Book(title.getText().toString(), "", "", "");
                                     cartDb.deleteBook(deleteBook);
-                                    onCreate(null);
+                                    adapter.changeCursor(cartDb.fetchAllBooks());
                                     cartDb.close();
                                 }
                             });
@@ -165,7 +165,7 @@ public class Bookstore extends ListActivity {
                     cartDb.persist(newBook.title, newBook.authors, newBook.isbn, newBook.price);
                     cartDb.close();
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setMessage("User added a new book, and the title is " + newBook.title + ", the author is " + newBook.authors)
+                    builder.setMessage("User added a new book, and the title is " + newBook.title + ", the authors are " + newBook.authors)
                             .setCancelable(false)
                             .setTitle("Details")
                             .setPositiveButton("OK", new DialogInterface.OnClickListener() {
